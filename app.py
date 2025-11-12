@@ -60,9 +60,16 @@ def extract_excel_data(filepath):
     return data
 
 
-def compute_similarity(contents, token_pattern=None):
+def compute_similarity(contents, token_pattern=r"(?u)\b\w+\b"):
+    """
+    Compute cosine similarity for a list of strings safely.
+    Default token_pattern matches words.
+    """
+    # Replace NaN with empty string
+    safe_contents = [str(c) if c else "" for c in contents]
+
     vectorizer = TfidfVectorizer(token_pattern=token_pattern, stop_words="english")
-    tfidf = vectorizer.fit_transform(contents)
+    tfidf = vectorizer.fit_transform(safe_contents)
     return cosine_similarity(tfidf)
 
 
@@ -136,7 +143,10 @@ def analyze_excel_folder(submissions_dir):
         }
 
     text_sim = compute_similarity(df["text_content"].fillna(""))
-    formula_sim = compute_similarity(df["formula_content"].fillna(""), token_pattern=r"[\w\+\-\*/\(\)]+")
+    formula_sim = compute_similarity(
+        df["formula_content"].fillna(""), 
+        token_pattern=r"[\w\+\-\*/\(\)]+"
+    )
     text_dups = find_duplicates(text_sim, df["filename"])
     formula_dups = find_duplicates(formula_sim, df["filename"])
     metadata_flags = detect_metadata_anomalies(df)
