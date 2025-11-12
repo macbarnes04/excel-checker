@@ -233,9 +233,10 @@ def create_pdf_report(df, text_dups, formula_dups, metadata_flags, output_path="
         f"Total submissions: {len(df)}",
         f"Text duplicates: {len(text_dups)}",
         f"Formula duplicates: {len(formula_dups)}",
-        f"Clusters: {sum(len(v) > 1 for v in df['suspicious_score'].to_dict().values())}",
+        f"Clusters: {sum(v > 1 for v in df['suspicious_score'])}",
         f"Metadata anomalies: {len(metadata_flags)}"
     ]
+
 
     for line in summary_lines:
         for safe_line in safe_text_for_pdf(line).split("\n"):
