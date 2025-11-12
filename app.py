@@ -9,6 +9,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import AgglomerativeClustering
 from datetime import datetime
 from collections import defaultdict
+from fpdf import FPDF
 
 # ========== CONFIG ==========
 SUBMISSIONS_DIR = "submissions"   # folder with all Excel files
@@ -211,6 +212,21 @@ def analyze_excel_folder(submissions_dir):
     return "\n".join(summary)
 
 
+def create_pdf_report(report_text, output_path="report.pdf"):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.set_font("Arial", size=12)
+
+    # Add report lines
+    for line in report_text.split("\n"):
+        pdf.multi_cell(0, 6, line)
+    
+    pdf.output(output_path)
+    return output_path
+
+
 # Optional: allow running directly from terminal
 if __name__ == "__main__":
     print(analyze_excel_folder(SUBMISSIONS_DIR))
+
