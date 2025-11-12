@@ -216,7 +216,10 @@ def create_pdf_report(report_text, output_path="report.pdf"):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.set_font("Arial", size=12)
+    
+    # Use a UTF-8 compatible font
+    pdf.add_font("DejaVu", "", "DejaVuSans.ttf", uni=True)
+    pdf.set_font("DejaVu", size=12)
 
     # Add report lines
     for line in report_text.split("\n"):
@@ -224,6 +227,7 @@ def create_pdf_report(report_text, output_path="report.pdf"):
     
     pdf.output(output_path)
     return output_path
+
 
 
 # Optional: allow running directly from terminal

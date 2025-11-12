@@ -4,7 +4,7 @@ import shutil
 import streamlit as st
 from app import analyze_excel_folder, create_pdf_report  # make sure create_pdf_report is imported
 
-st.title(" AI Detection for LBO Submissions 🔍📊🤖")
+st.title(" AI Detection for LBO Submissions 🔍📊")
 st.write("Select all LBO Excel files from Canvas downloads")
 
 uploaded_files = st.file_uploader(

@@ -3,5 +3,5 @@ openpyxl
 pandas
 scikit-learn
 plotly
-fpdf>=1.7.2
+fpdf2>=2.6.1
 
