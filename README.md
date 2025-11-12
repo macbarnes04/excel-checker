@@ -11,7 +11,8 @@ This Streamlit app allows instructors to quickly check Excel submissions for pot
 ## ✅ Features / What it checks
 
 1. **Formula similarity**  
-   - Detects submissions with highly similar formulas (>90% similarity by default).  
+   - Detects submissions with highly similar formulas (>90% similarity by default).
+   - Detects submissions that are highly similar **relative to the rest of the class**
    - Flags potential copying between students.  
 
 2. **Text similarity**  
@@ -60,5 +61,6 @@ This Streamlit app allows instructors to quickly check Excel submissions for pot
 - Works best with **Excel files downloaded directly from Canvas**.  
 - Designed for **LBO modeling exercises** but can work with other Excel-based assignments.  
 - Minimal setup: Python 3.11 recommended, install requirements via `pip install -r requirements.txt`.
+
 
 
