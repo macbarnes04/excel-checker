@@ -276,26 +276,23 @@ def safe_text_for_pdf(text):
         return ""
     return str(text).replace("\r", "").replace("\t", "    ")
 
-def create_pdf_report(df, text_dups, formula_dups, formula_dups_relative, metadata_flags, output_path):
-    from fpdf import FPDF
+def create_pdf_report(df, text_dups, formula_dups, formula_dups_relative, metadata_flags, clusters, output_path):
 
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.add_page()  # MUST add a page before writing
+    pdf.add_page()
 
-    # --- Title ---
     pdf.set_font("Arial", "B", 16)
     pdf.multi_cell(0, 10, "LBO Model AI Report - PE Methods", align="C")
-    pdf.ln(5)  # small gap after title
+    pdf.ln(5)
 
-    # --- Summary Section ---
     pdf.set_font("Arial", size=12)
     summary_lines = [
         f"✅ Total submissions: {len(df)}",
         f"⚠️ Text duplicates: {len(text_dups)}",
         f"⚠️ Formula duplicates: {len(formula_dups)}",
         f"⚠️ Relative formula duplicates (rare-but-shared): {len(formula_dups_relative)}",
-        f"📁 Clusters: "{sum(len(v) > 1 for v in clusters.values())}",
+        f"📁 Clusters: {sum(len(v) > 1 for v in clusters.values())}",
         f"🔎 Metadata anomalies: {len(metadata_flags)}"
     ]
 
@@ -303,9 +300,8 @@ def create_pdf_report(df, text_dups, formula_dups, formula_dups_relative, metada
         safe_line = safe_text_for_pdf(line)
         for subline in safe_line.split("\n"):
             pdf.multi_cell(0, 6, subline)
-        pdf.ln(2)  # small space between lines
+        pdf.ln(2)
 
-    # --- Top Suspicious Submissions ---
     if "suspicious_score" in df.columns:
         pdf.add_page()
         pdf.set_font("Arial", "B", 12)
@@ -313,13 +309,12 @@ def create_pdf_report(df, text_dups, formula_dups, formula_dups_relative, metada
         pdf.ln(2)
 
         pdf.set_font("Arial", size=11)
-        for _, row in df.head(10).iterrows():  # top 10 suspicious
+        for _, row in df.head(10).iterrows():
             line = f"{row.get('student_name', 'Unknown')} ({row.get('filename', 'Unknown')}) - Suspicious Score: {row.get('suspicious_score', 'N/A')}"
             for subline in safe_text_for_pdf(line).split("\n"):
                 pdf.multi_cell(0, 6, subline)
             pdf.ln(1)
 
-    # --- Optional: List Relative Formula Duplicates ---
     if formula_dups_relative:
         pdf.add_page()
         pdf.set_font("Arial", "B", 12)
@@ -332,7 +327,6 @@ def create_pdf_report(df, text_dups, formula_dups, formula_dups_relative, metada
                 pdf.multi_cell(0, 6, subline)
             pdf.ln(1)
 
-    # --- Optional: Metadata Flags ---
     if metadata_flags:
         pdf.add_page()
         pdf.set_font("Arial", "B", 12)
@@ -344,7 +338,6 @@ def create_pdf_report(df, text_dups, formula_dups, formula_dups_relative, metada
                 pdf.multi_cell(0, 6, subline)
             pdf.ln(1)
 
-    # Save PDF
     pdf.output(output_path)
     return output_path
 
