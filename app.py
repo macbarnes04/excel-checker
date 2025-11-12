@@ -137,38 +137,33 @@ def cluster_submissions(sim_matrix, filenames):
     return clusters
 
 
-def main():
-    print("🔍 Scanning Excel submissions...")
-
-    # Step 1: Extract data from each Excel file
+def analyze_excel_folder(submissions_dir):
+    """
+    Run full Excel submission analysis for the given directory.
+    Returns a formatted report string and saves a CSV report.
+    """
     records = []
-    for filename in os.listdir(SUBMISSIONS_DIR):
+    for filename in os.listdir(submissions_dir):
         if filename.endswith(".xlsx"):
-            path = os.path.join(SUBMISSIONS_DIR, filename)
+            path = os.path.join(submissions_dir, filename)
             record = extract_excel_data(path)
-            # Add a student name field for convenience
             record["student_name"] = record.get("lastModifiedBy") or record.get("creator") or "Unknown"
             records.append(record)
 
     df = pd.DataFrame(records)
 
-    # Step 2: Compute similarities
-    print("🧠 Computing similarity matrices...")
+    if len(df) == 0:
+        return "No valid Excel files found."
+
     text_sim = compute_text_similarity(df["text_content"].fillna(""))
     formula_sim = compute_formula_similarity(df["formula_content"].fillna(""))
 
-    # Step 3: Detect duplicates
     text_dups = find_duplicates(text_sim, df["filename"], SIMILARITY_THRESHOLD)
     formula_dups = find_duplicates(formula_sim, df["filename"], SIMILARITY_THRESHOLD)
 
-    # Step 4: Metadata anomalies
     metadata_flags = detect_metadata_anomalies(df)
-
-    # Step 5: Clustering
     clusters = cluster_submissions(formula_sim, df["filename"])
 
-    # Step 6: Build report with suspiciousness score
-    print("📊 Generating report...")
     suspicious_scores = []
     for i, row in df.iterrows():
         score = 0
@@ -183,43 +178,29 @@ def main():
     df["suspicious_score"] = suspicious_scores
     df = df.sort_values("suspicious_score", ascending=False)
 
-    # Select final report columns
-    report_cols = [
-        "filename", "student_name", "creator", "lastModifiedBy", 
-        "created", "modified", "suspicious_score"
-    ]
-    df[report_cols].to_csv(REPORT_FILE, index=False)
+    # Save report CSV
+    report_path = os.path.join(submissions_dir, REPORT_FILE)
+    df.to_csv(report_path, index=False)
 
-    # Step 7: Console summary
-    print("\n✅ DONE. Results summary:")
-    print(f"  - Total submissions: {len(df)}")
-    print(f"  - Possible duplicate text pairs: {len(text_dups)}")
-    print(f"  - Possible duplicate formula pairs: {len(formula_dups)}")
-    print(f"  - Metadata anomalies: {len(metadata_flags)}")
-    print(f"  - Report saved to {REPORT_FILE}")
+    # Build readable text summary
+    summary = []
+    summary.append(f"✅ Total submissions: {len(df)}")
+    summary.append(f"⚠️ Text duplicates: {len(text_dups)} | Formula duplicates: {len(formula_dups)}")
+    summary.append(f"📁 Clusters: {sum(len(v) > 1 for v in clusters.values())}")
+    summary.append(f"🔎 Metadata anomalies: {len(metadata_flags)}")
 
-    # Group and show duplicates with student names
-    def display_dup_list(dups, label):
-        if dups:
-            print(f"\n⚠️  {label} similarities ({len(dups)} pairs):")
-            for f1, f2, sim in dups:
-                s1 = df.loc[df["filename"] == f1, "student_name"].values[0]
-                s2 = df.loc[df["filename"] == f2, "student_name"].values[0]
-                print(f"   {s1} ↔ {s2} ({sim*100:.1f}% similar)")
-        else:
-            print(f"\n✅ No significant {label} similarities found.")
-
-    display_dup_list(text_dups, "text")
-    display_dup_list(formula_dups, "formula")
-
-    # Clusters summary
-    print("\n📁 Clusters (similar groups):")
-    for cluster_id, files in clusters.items():
-        if len(files) > 1:
-            names = [df.loc[df["filename"] == f, "student_name"].values[0] for f in files]
-            print(f"  Cluster {cluster_id}: {names}")
+    summary.append("\nTop suspicious submissions:")
+    for _, r in df.head(5).iterrows():
+        summary.append(f" - {r['student_name']} ({r['filename']}): score {r['suspicious_score']}")
 
     if metadata_flags:
-        print("\n⚠️ Metadata Flags:")
+        summary.append("\nMetadata flags:")
         for f in metadata_flags:
-            print("  -", f)
+            summary.append(f" - {f}")
+
+    return "\n".join(summary)
+
+
+# Optional: allow running directly from terminal
+if __name__ == "__main__":
+    print(analyze_excel_folder(SUBMISSIONS_DIR))
