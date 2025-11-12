@@ -21,28 +21,35 @@ if uploaded_files:
 
     st.info("Running analysis... ⏳")
 
-    # Run analysis and unpack results
+    # --- Run analysis and unpack results ---
     results = analyze_excel_folder(temp_dir)
+
     report_text = results["report_text"]
     submissions_df = results["df"]
     text_duplicates = results["text_dups"]
     formula_duplicates = results["formula_dups"]
     metadata_anomalies = results["metadata_flags"]
 
+    # ✅ New: unpack relative similarity + clusters
+    formula_dups_relative = results.get("formula_dups_relative", [])
+    clusters = results.get("clusters", [])
+
     st.success("Analysis complete! ✅")
 
     st.subheader("🧾 Report Summary")
     st.text(report_text)
 
-    # Create PDF
+    # --- Create PDF ---
     pdf_path = create_pdf_report(
         df=submissions_df,
         text_dups=text_duplicates,
         formula_dups=formula_duplicates,
+        formula_dups_relative=formula_dups_relative,
+        clusters=clusters,
         metadata_flags=metadata_anomalies,
-        output_path=os.path.join(temp_dir, "LBO_AI_Report.pdf")
     )
 
+    # --- Download button ---
     st.download_button(
         "Download PDF Report",
         data=open(pdf_path, "rb"),
@@ -50,4 +57,5 @@ if uploaded_files:
         mime="application/pdf"
     )
 
+    # Clean up temporary directory
     shutil.rmtree(temp_dir)
