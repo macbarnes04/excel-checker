@@ -212,9 +212,9 @@ def analyze_excel_folder(submissions_dir):
     return "\n".join(summary)
 
 
-def strip_emojis(text):
-    # Remove characters outside basic multilingual plane (non-ASCII)
-    return re.sub(r"[^\x00-\x7F]+", "", text)
+def strip_non_ascii(text):
+    return re.sub(r"[^\x00-\x7F]", "?", text)
+
 
 def create_pdf_report(report_text, output_path="report.pdf"):
     pdf = FPDF()
@@ -223,7 +223,8 @@ def create_pdf_report(report_text, output_path="report.pdf"):
     pdf.set_font("Arial", size=12)  # default font
 
     # Strip emojis / non-ASCII
-    safe_text = strip_emojis(report_text)
+    safe_text = strip_non_ascii(report_text)
+
 
     # Add text line by line
     for line in safe_text.split("\n"):
