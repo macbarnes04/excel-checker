@@ -119,18 +119,15 @@ def detect_metadata_anomalies(df):
 
 
 def cluster_submissions(sim_matrix, filenames):
-    """
-    Use hierarchical clustering to group similar submissions.
-    """
+    dist_matrix = 1 - sim_matrix
     clustering = AgglomerativeClustering(
         n_clusters=None,
         distance_threshold=1 - SIMILARITY_THRESHOLD,
-        affinity='precomputed',
-        linkage='complete'
+        metric='precomputed',   # updated from 'affinity'
+        linkage='average'       # 'average' works with precomputed distances
     )
-    dist_matrix = 1 - sim_matrix
     labels = clustering.fit_predict(dist_matrix)
-
+    
     clusters = defaultdict(list)
     for file, label in zip(filenames, labels):
         clusters[label].append(file)
