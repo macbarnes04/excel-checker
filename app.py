@@ -205,68 +205,47 @@ def break_long_words(text, max_len=80):
 
 
 def safe_text_for_pdf(text):
-    text = strip_non_ascii(text)
-    text = break_long_words(text, max_len=80)
-    return text
+    """Ensure text is a string and replace problematic characters for PDF."""
+    if text is None:
+        return ""
+    return str(text).replace("\r", "").replace("\t", "    ")
 
-def create_pdf_report(df, text_dups, formula_dups, metadata_flags, output_path="report.pdf"):
-    """
-    Create a nicely formatted PDF report from analysis results.
-    Handles long words and non-ASCII characters safely.
-    """
+def create_pdf_report(df, text_dups, formula_dups, metadata_flags, output_path):
     pdf = FPDF()
-    pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
-
-    # --- Title ---
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 10, "LBO Submission Analysis Report", ln=True, align="C")
-    pdf.ln(5)
-
-    # --- Summary ---
-    pdf.set_font("Arial", "B", 12)
-    pdf.cell(0, 6, "Summary:", ln=True)
+    pdf.add_page()  # MUST add a page before writing
     pdf.set_font("Arial", size=12)
-    pdf.ln(1)
 
+    # --- Summary Section ---
     summary_lines = [
         f"Total submissions: {len(df)}",
         f"Text duplicates: {len(text_dups)}",
         f"Formula duplicates: {len(formula_dups)}",
-        f"Clusters: {sum(v > 1 for v in df['suspicious_score'])}",
+        f"Clusters: {sum(1 for v in df.get('suspicious_score', []) if isinstance(v, (list, tuple)) and len(v) > 1)}",
         f"Metadata anomalies: {len(metadata_flags)}"
     ]
 
-
     for line in summary_lines:
-        for safe_line in safe_text_for_pdf(line).split("\n"):
-            pdf.multi_cell(0, 6, safe_line)
-    pdf.ln(3)
+        safe_line = safe_text_for_pdf(line)
+        # split on newlines just in case
+        for subline in safe_line.split("\n"):
+            pdf.multi_cell(0, 6, subline)
+        pdf.ln(2)  # small space between lines
 
-    # --- Top Suspicious Submissions ---
-    pdf.set_font("Arial", "B", 12)
-    pdf.cell(0, 6, "Top Suspicious Submissions:", ln=True)
-    pdf.set_font("Arial", size=12)
-    pdf.ln(1)
+    # --- Top Suspicious Submissions (Optional) ---
+    if "suspicious_score" in df.columns:
+        pdf.add_page()
+        pdf.set_font("Arial", size=11)
+        pdf.multi_cell(0, 6, "Top Suspicious Submissions:")
+        pdf.ln(2)
 
-    for _, row in df.head(5).iterrows():
-        line = f"- {row['student_name']} ({row['filename']}): score {row['suspicious_score']}"
-        for safe_line in safe_text_for_pdf(line).split("\n"):
-            pdf.multi_cell(0, 6, safe_line)
-    pdf.ln(3)
+        for _, row in df.iterrows():
+            line = f"{row.get('filename', 'Unknown')} - Suspicious Score: {row.get('suspicious_score', 'N/A')}"
+            for subline in safe_text_for_pdf(line).split("\n"):
+                pdf.multi_cell(0, 6, subline)
+            pdf.ln(1)
 
-    # --- Metadata Flags ---
-    if metadata_flags:
-        pdf.set_font("Arial", "B", 12)
-        pdf.cell(0, 6, "Metadata Flags:", ln=True)
-        pdf.set_font("Arial", size=12)
-        pdf.ln(1)
-
-        for flag in metadata_flags:
-            for safe_line in safe_text_for_pdf(flag).split("\n"):
-                pdf.multi_cell(0, 6, safe_line)
-
-    # --- Output PDF ---
+    # Save PDF
     pdf.output(output_path)
     return output_path
 
