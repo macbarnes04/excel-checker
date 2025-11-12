@@ -224,38 +224,49 @@ def safe_text_for_pdf(text):
     text = break_long_words(text, max_len=80)  # break extremely long words
     return text
 
-def create_pdf_report(report_text, output_path="report.pdf"):
+
+def create_pdf_report(df, text_dups, formula_dups, metadata_flags, output_path="report.pdf"):
+    """
+    Create a nicely formatted PDF report from analysis results.
+    """
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.set_font("Arial", size=12)
 
-    # Make text safe for PDF
-    safe_text = safe_text_for_pdf(report_text)
-
-    # Split into lines
-    lines = safe_text.split("\n")
-
-    # Add a title
+    # Title
     pdf.set_font("Arial", "B", 16)
     pdf.cell(0, 10, "LBO Submission Analysis Report", ln=True, align="C")
     pdf.ln(5)
 
-    # Reset font for body
+    # Summary section
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(0, 6, "Summary:", ln=True)
     pdf.set_font("Arial", size=12)
+    pdf.ln(1)
+    pdf.multi_cell(0, 6, f"Total submissions: {len(df)}")
+    pdf.multi_cell(0, 6, f"Text duplicates: {len(text_dups)}")
+    pdf.multi_cell(0, 6, f"Formula duplicates: {len(formula_dups)}")
+    pdf.multi_cell(0, 6, f"Clusters: {len([c for c in df['suspicious_score'] if c>0])}")
+    pdf.multi_cell(0, 6, f"Metadata anomalies: {len(metadata_flags)}")
+    pdf.ln(3)
 
-    # Process each line for nicer formatting
-    for line in lines:
-        line = line.strip()
-        if not line:
-            pdf.ln(2)
-            continue
+    # Top suspicious submissions
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(0, 6, "Top Suspicious Submissions:", ln=True)
+    pdf.set_font("Arial", size=12)
+    pdf.ln(1)
+    for i, row in df.iterrows():
+        pdf.multi_cell(0, 6, f"- {row['student_name']} ({row['filename']}): score {row['suspicious_score']}")
+    pdf.ln(3)
 
-        # Add bullets for "Top suspicious submissions" section
-        if line.lower().startswith("- "):
-            pdf.multi_cell(0, 6, "• " + line[2:])
-        else:
-            pdf.multi_cell(0, 6, line)
+    # Optional: Metadata flags
+    if metadata_flags:
+        pdf.set_font("Arial", "B", 12)
+        pdf.cell(0, 6, "Metadata Flags:", ln=True)
+        pdf.set_font("Arial", size=12)
+        pdf.ln(1)
+        for flag in metadata_flags:
+            pdf.multi_cell(0, 6, f"- {flag}")
 
     pdf.output(output_path)
     return output_path
