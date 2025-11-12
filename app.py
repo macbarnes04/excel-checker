@@ -209,51 +209,65 @@ def safe_text_for_pdf(text):
     text = break_long_words(text, max_len=80)
     return text
 
-
 def create_pdf_report(df, text_dups, formula_dups, metadata_flags, output_path="report.pdf"):
-    """Create a nicely formatted PDF report."""
+    """
+    Create a nicely formatted PDF report from analysis results.
+    Handles long words and non-ASCII characters safely.
+    """
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
 
-    # Title
+    # --- Title ---
     pdf.set_font("Arial", "B", 16)
     pdf.cell(0, 10, "LBO Submission Analysis Report", ln=True, align="C")
     pdf.ln(5)
 
-    # Summary section
+    # --- Summary ---
     pdf.set_font("Arial", "B", 12)
     pdf.cell(0, 6, "Summary:", ln=True)
     pdf.set_font("Arial", size=12)
     pdf.ln(1)
-    pdf.multi_cell(0, 6, safe_text_for_pdf(f"Total submissions: {len(df)}"))
-    pdf.multi_cell(0, 6, safe_text_for_pdf(f"Text duplicates: {len(text_dups)}"))
-    pdf.multi_cell(0, 6, safe_text_for_pdf(f"Formula duplicates: {len(formula_dups)}"))
-    pdf.multi_cell(0, 6, safe_text_for_pdf(f"Clusters: {sum(len(v) > 1 for v in df['suspicious_score'])}"))
-    pdf.multi_cell(0, 6, safe_text_for_pdf(f"Metadata anomalies: {len(metadata_flags)}"))
+
+    summary_lines = [
+        f"Total submissions: {len(df)}",
+        f"Text duplicates: {len(text_dups)}",
+        f"Formula duplicates: {len(formula_dups)}",
+        f"Clusters: {sum(len(v) > 1 for v in df['suspicious_score'].to_dict().values())}",
+        f"Metadata anomalies: {len(metadata_flags)}"
+    ]
+
+    for line in summary_lines:
+        for safe_line in safe_text_for_pdf(line).split("\n"):
+            pdf.multi_cell(0, 6, safe_line)
     pdf.ln(3)
 
-    # Top suspicious submissions
+    # --- Top Suspicious Submissions ---
     pdf.set_font("Arial", "B", 12)
     pdf.cell(0, 6, "Top Suspicious Submissions:", ln=True)
     pdf.set_font("Arial", size=12)
     pdf.ln(1)
-    for _, row in df.iterrows():
-        pdf.multi_cell(0, 6, safe_text_for_pdf(f"- {row['student_name']} ({row['filename']}): score {row['suspicious_score']}"))
+
+    for _, row in df.head(5).iterrows():
+        line = f"- {row['student_name']} ({row['filename']}): score {row['suspicious_score']}"
+        for safe_line in safe_text_for_pdf(line).split("\n"):
+            pdf.multi_cell(0, 6, safe_line)
     pdf.ln(3)
 
-    # Metadata flags
+    # --- Metadata Flags ---
     if metadata_flags:
         pdf.set_font("Arial", "B", 12)
         pdf.cell(0, 6, "Metadata Flags:", ln=True)
         pdf.set_font("Arial", size=12)
         pdf.ln(1)
-        for flag in metadata_flags:
-            pdf.multi_cell(0, 6, safe_text_for_pdf(f"- {flag}"))
 
+        for flag in metadata_flags:
+            for safe_line in safe_text_for_pdf(flag).split("\n"):
+                pdf.multi_cell(0, 6, safe_line)
+
+    # --- Output PDF ---
     pdf.output(output_path)
     return output_path
-
 
 # Optional: allow running from terminal
 if __name__ == "__main__":
