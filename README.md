@@ -2,6 +2,8 @@
 
 **Automated Excel Submission Analyzer for LBO Modeling Exercises**
 
+https://excel-checker-pe-methods-fall-2025.streamlit.app/ 
+
 This Streamlit app allows instructors to quickly check Excel submissions for potential AI-generated content, formula duplication, and metadata anomalies.
 
 ---
@@ -58,3 +60,4 @@ This Streamlit app allows instructors to quickly check Excel submissions for pot
 - Works best with **Excel files downloaded directly from Canvas**.  
 - Designed for **LBO modeling exercises** but can work with other Excel-based assignments.  
 - Minimal setup: Python 3.11 recommended, install requirements via `pip install -r requirements.txt`.
+
