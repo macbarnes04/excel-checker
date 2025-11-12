@@ -1,4 +1,4 @@
-# LBO AI Detection 🧮🤖
+# AI Detection - LBO Submissions 🔍
 
 **Automated Excel Submission Analyzer for LBO Modeling Exercises**
 
@@ -60,4 +60,5 @@ This Streamlit app allows instructors to quickly check Excel submissions for pot
 - Works best with **Excel files downloaded directly from Canvas**.  
 - Designed for **LBO modeling exercises** but can work with other Excel-based assignments.  
 - Minimal setup: Python 3.11 recommended, install requirements via `pip install -r requirements.txt`.
+
 
