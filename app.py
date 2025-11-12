@@ -228,16 +228,38 @@ def create_pdf_report(report_text, output_path="report.pdf"):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.set_font("Arial", size=12)  # default font
+    pdf.set_font("Arial", size=12)
 
+    # Make text safe for PDF
     safe_text = safe_text_for_pdf(report_text)
 
-    # Add text line by line
-    for line in safe_text.split("\n"):
-        pdf.multi_cell(0, 6, line)
+    # Split into lines
+    lines = safe_text.split("\n")
+
+    # Add a title
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, "LBO Submission Analysis Report", ln=True, align="C")
+    pdf.ln(5)
+
+    # Reset font for body
+    pdf.set_font("Arial", size=12)
+
+    # Process each line for nicer formatting
+    for line in lines:
+        line = line.strip()
+        if not line:
+            pdf.ln(2)
+            continue
+
+        # Add bullets for "Top suspicious submissions" section
+        if line.lower().startswith("- "):
+            pdf.multi_cell(0, 6, "• " + line[2:])
+        else:
+            pdf.multi_cell(0, 6, line)
 
     pdf.output(output_path)
     return output_path
+
 
 
 # Optional: allow running directly from terminal
