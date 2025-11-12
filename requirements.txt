@@ -3,3 +3,5 @@ openpyxl
 pandas
 scikit-learn
 plotly
+fpdf>=1.7.2
+
