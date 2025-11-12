@@ -39,7 +39,9 @@ if uploaded_files:
     st.subheader("🧾 Report Summary")
     st.text(report_text)
 
-    # --- Create PDF ---
+   # --- Create PDF ---
+    output_path = os.path.join(temp_dir, "LBO_AI_Report.pdf")
+
     pdf_path = create_pdf_report(
         df=submissions_df,
         text_dups=text_duplicates,
@@ -47,6 +49,7 @@ if uploaded_files:
         formula_dups_relative=formula_dups_relative,
         clusters=clusters,
         metadata_flags=metadata_anomalies,
+        output_path=output_path,
     )
 
     # --- Download button ---
