@@ -30,11 +30,11 @@ if uploaded_files:
     formula_duplicates = results["formula_dups"]
     metadata_anomalies = results["metadata_flags"]
 
-    # ✅ New: unpack relative similarity + clusters
+    # New: unpack relative similarity + clusters
     formula_dups_relative = results.get("formula_dups_relative", [])
     clusters = results.get("clusters", [])
 
-    st.success("Analysis complete! ✅")
+    st.success("Analysis complete!")
 
     st.subheader("🧾 Report Summary")
     st.text(report_text)
