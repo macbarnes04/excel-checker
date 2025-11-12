@@ -4,8 +4,7 @@ import shutil
 import streamlit as st
 from app import analyze_excel_folder, create_pdf_report  # make sure create_pdf_report is imported
 
-st.title(" AI Detection - LBO Submissions 🔍📊")
-st.write("Select all LBO Excel files from Canvas downloads")
+st.title("AI Detection - LBO Submissions 🔍📊")
 
 uploaded_files = st.file_uploader(
     "Select all LBO Excel files from Canvas downloads",
@@ -22,7 +21,13 @@ if uploaded_files:
 
     st.info("Running analysis... ⏳")
 
-    report_text = analyze_excel_folder(temp_dir)
+    # Run analysis and unpack results
+    results = analyze_excel_folder(temp_dir)
+    report_text = results["report_text"]
+    submissions_df = results["df"]
+    text_duplicates = results["text_dups"]
+    formula_duplicates = results["formula_dups"]
+    metadata_anomalies = results["metadata_flags"]
 
     st.success("Analysis complete! ✅")
 
@@ -30,7 +35,13 @@ if uploaded_files:
     st.text(report_text)
 
     # Create PDF
-    pdf_path = create_pdf_report(report_text, os.path.join(temp_dir, "report.pdf"))
+    pdf_path = create_pdf_report(
+        df=submissions_df,
+        text_dups=text_duplicates,
+        formula_dups=formula_duplicates,
+        metadata_flags=metadata_anomalies,
+        output_path=os.path.join(temp_dir, "LBO_AI_Report.pdf")
+    )
 
     st.download_button(
         "Download PDF Report",
