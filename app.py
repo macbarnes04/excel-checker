@@ -217,14 +217,20 @@ def create_pdf_report(report_text, output_path="report.pdf"):
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
     
-    # Use a UTF-8 compatible font
-    pdf.add_font("DejaVu", "", "DejaVuSans.ttf", uni=True)
+    # Add UTF-8 font
+    font_path = os.path.join("fonts", "DejaVuSans.ttf")
+    pdf.add_font("DejaVu", "", font_path, uni=True)
     pdf.set_font("DejaVu", size=12)
 
-    # Add report lines
+    # Split text into lines and add safely
     for line in report_text.split("\n"):
-        pdf.multi_cell(0, 6, line)
-    
+        try:
+            pdf.multi_cell(0, 6, line)
+        except Exception as e:
+            # Replace unsupported chars with '?'
+            safe_line = line.encode("utf-8", errors="replace").decode("utf-8")
+            pdf.multi_cell(0, 6, safe_line)
+
     pdf.output(output_path)
     return output_path
 
