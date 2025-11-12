@@ -117,21 +117,34 @@ def detect_metadata_anomalies(df):
 
     return anomalies
 
-
 def cluster_submissions(sim_matrix, filenames):
+    from collections import defaultdict
+    import numpy as np
+    
+    clusters = defaultdict(list)
+    
+    if len(filenames) < 2:
+        # Only one file → just return it as a single cluster
+        clusters[0] = filenames
+        return clusters
+    
+    # safe to compute distance matrix and cluster
     dist_matrix = 1 - sim_matrix
+    dist_matrix = np.nan_to_num(dist_matrix)
+    
     clustering = AgglomerativeClustering(
         n_clusters=None,
-        distance_threshold=1 - SIMILARITY_THRESHOLD,
-        metric='precomputed',   # updated from 'affinity'
-        linkage='average'       # 'average' works with precomputed distances
+        distance_threshold=1 - 0.9,  # SIMILARITY_THRESHOLD
+        metric='precomputed',
+        linkage='average'
     )
     labels = clustering.fit_predict(dist_matrix)
     
-    clusters = defaultdict(list)
     for file, label in zip(filenames, labels):
         clusters[label].append(file)
+    
     return clusters
+
 
 
 def analyze_excel_folder(submissions_dir):
