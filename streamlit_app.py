@@ -4,7 +4,7 @@ import tempfile
 import shutil
 import os
 
-st.title("Excel Submission Checker 🧮")
+st.title(" AI Detection for LBO Submissions - PE Methods 🔍📊")
 
 st.write("Upload a folder of `.xlsx` submissions to analyze:")
 
