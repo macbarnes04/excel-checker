@@ -24,6 +24,14 @@ WEIGHT_TEXT_DUP = 2
 WEIGHT_AI_METADATA = 5
 # ============================
 
+def safe_text_for_pdf(text: str) -> str:
+    """Remove or replace characters unsupported by FPDF (non-Unicode-safe)."""
+    if not isinstance(text, str):
+        text = str(text)
+    # Replace any non-ASCII char with a similar ASCII version or a placeholder
+    text = re.sub(r"[^\x00-\x7F]+", " ", text)
+    # Collapse multiple spaces
+    return re.sub(r"\s+", " ", text).strip()
 
 def compute_anomaly_scores(series):
     """
@@ -276,66 +284,52 @@ def safe_text_for_pdf(text):
         return ""
     return str(text).replace("\r", "").replace("\t", "    ")
 
-def create_pdf_report(df, text_dups, formula_dups, formula_dups_relative, metadata_flags, clusters, output_path):
-
+def create_pdf_report(df, text_dups, formula_dups, formula_dups_relative, clusters, metadata_flags, output_path):
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
 
+    # --- Title ---
     pdf.set_font("Arial", "B", 16)
-    pdf.multi_cell(0, 10, "LBO Model AI Report - PE Methods", align="C")
+    pdf.multi_cell(0, 10, safe_text_for_pdf("LBO Model AI Report - PE Methods"), align="C")
     pdf.ln(5)
 
+    # --- Summary Section ---
     pdf.set_font("Arial", size=12)
     summary_lines = [
-        f"✅ Total submissions: {len(df)}",
-        f"⚠️ Text duplicates: {len(text_dups)}",
-        f"⚠️ Formula duplicates: {len(formula_dups)}",
-        f"⚠️ Relative formula duplicates (rare-but-shared): {len(formula_dups_relative)}",
-        f"📁 Clusters: {sum(len(v) > 1 for v in clusters.values())}",
-        f"🔎 Metadata anomalies: {len(metadata_flags)}"
+        f"Total submissions: {len(df)}",
+        f"Text duplicates: {len(text_dups)}",
+        f"Formula duplicates: {len(formula_dups)}",
+        f"Relative formula duplicates: {len(formula_dups_relative)}",
+        f"Clusters: {len([v for v in clusters.values() if len(v) > 1])}",
+        f"Metadata anomalies: {len(metadata_flags)}"
     ]
 
     for line in summary_lines:
-        safe_line = safe_text_for_pdf(line)
-        for subline in safe_line.split("\n"):
-            pdf.multi_cell(0, 6, subline)
+        pdf.multi_cell(0, 6, safe_text_for_pdf(line))
         pdf.ln(2)
 
-    if "suspicious_score" in df.columns:
-        pdf.add_page()
-        pdf.set_font("Arial", "B", 12)
-        pdf.multi_cell(0, 8, "Top Suspicious Submissions:")
-        pdf.ln(2)
+    # --- Top Suspicious Submissions ---
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 13)
+    pdf.multi_cell(0, 8, safe_text_for_pdf("Top Suspicious Submissions:"))
+    pdf.ln(3)
+    pdf.set_font("Arial", size=11)
 
-        pdf.set_font("Arial", size=11)
-        for _, row in df.head(10).iterrows():
-            line = f"{row.get('student_name', 'Unknown')} ({row.get('filename', 'Unknown')}) - Suspicious Score: {row.get('suspicious_score', 'N/A')}"
-            for subline in safe_text_for_pdf(line).split("\n"):
-                pdf.multi_cell(0, 6, subline)
-            pdf.ln(1)
+    for _, row in df.head(10).iterrows():
+        line = f"{row.get('student_name', 'Unknown')} - {row.get('filename', 'Unknown')} | Score: {row.get('suspicious_score', 'N/A')}"
+        pdf.multi_cell(0, 6, safe_text_for_pdf(line))
+        pdf.ln(1)
 
-    if formula_dups_relative:
-        pdf.add_page()
-        pdf.set_font("Arial", "B", 12)
-        pdf.multi_cell(0, 8, "Relative Formula Duplicates (rare-but-shared):")
-        pdf.ln(2)
-        pdf.set_font("Arial", size=11)
-        for dup_group in formula_dups_relative:
-            group_line = ", ".join(dup_group)
-            for subline in safe_text_for_pdf(group_line).split("\n"):
-                pdf.multi_cell(0, 6, subline)
-            pdf.ln(1)
-
+    # --- Metadata flags ---
     if metadata_flags:
         pdf.add_page()
-        pdf.set_font("Arial", "B", 12)
-        pdf.multi_cell(0, 8, "Metadata Flags:")
-        pdf.ln(2)
+        pdf.set_font("Arial", "B", 13)
+        pdf.multi_cell(0, 8, safe_text_for_pdf("Metadata Flags:"))
+        pdf.ln(3)
         pdf.set_font("Arial", size=11)
-        for flag in metadata_flags:
-            for subline in safe_text_for_pdf(flag).split("\n"):
-                pdf.multi_cell(0, 6, subline)
+        for f in metadata_flags:
+            pdf.multi_cell(0, 6, safe_text_for_pdf(f))
             pdf.ln(1)
 
     pdf.output(output_path)
