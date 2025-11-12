@@ -215,6 +215,11 @@ def create_pdf_report(df, text_dups, formula_dups, metadata_flags, output_path):
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()  # MUST add a page before writing
     pdf.set_font("Arial", size=12)
+    
+       # --- Title ---
+    pdf.set_font("Arial", "B", 16)
+    pdf.multi_cell(0, 10, "LBO Model AI Report - PE Methods", align="C")
+    pdf.ln(5)  # small gap after title
 
     # --- Summary Section ---
     summary_lines = [
