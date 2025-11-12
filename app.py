@@ -211,10 +211,18 @@ def analyze_excel_folder(submissions_dir):
 
     return "\n".join(summary)
 
-
 def strip_non_ascii(text):
     return re.sub(r"[^\x00-\x7F]", "?", text)
 
+def break_long_words(text, max_len=80):
+    def split_word(word):
+        return "\n".join([word[i:i+max_len] for i in range(0, len(word), max_len)])
+    return " ".join(split_word(w) if len(w) > max_len else w for w in text.split())
+
+def safe_text_for_pdf(text):
+    text = strip_non_ascii(text)            # remove emojis / non-ASCII
+    text = break_long_words(text, max_len=80)  # break extremely long words
+    return text
 
 def create_pdf_report(report_text, output_path="report.pdf"):
     pdf = FPDF()
@@ -222,9 +230,7 @@ def create_pdf_report(report_text, output_path="report.pdf"):
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.set_font("Arial", size=12)  # default font
 
-    # Strip emojis / non-ASCII
-    safe_text = strip_non_ascii(report_text)
-
+    safe_text = safe_text_for_pdf(report_text)
 
     # Add text line by line
     for line in safe_text.split("\n"):
