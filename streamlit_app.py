@@ -8,7 +8,12 @@ st.title(" AI Detection for LBO Submissions - PE Methods 🔍📊")
 
 st.write("Upload a folder of `.xlsx` submissions to analyze:")
 
-uploaded_files = st.file_uploader("Select .xlsx files", type="xlsx", accept_multiple_files=True)
+uploaded_files = st.file_uploader(
+    "Select all LBO Excel files from Canvas downloads",
+    type="xlsx",
+    accept_multiple_files=True
+)
+
 
 if uploaded_files:
     temp_dir = tempfile.mkdtemp()
