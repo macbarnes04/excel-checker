@@ -6,7 +6,7 @@ import os
 
 st.title(" AI Detection for LBO Submissions - PE Methods 🔍📊")
 
-st.write("Upload a folder of `.xlsx` submissions to analyze:")
+st.write("Upload all `.xlsx` submissions to analyze:")
 
 uploaded_files = st.file_uploader(
     "Select all LBO Excel files from Canvas downloads",
