@@ -17,14 +17,15 @@ if uploaded_files:
         with open(file_path, "wb") as f:
             f.write(file.getbuffer())
 
-    st.success(f"Uploaded {len(uploaded_files)} files. Running analysis...")
+    # Run analysis with spinner
+    with st.spinner(f"🧠 Running analysis on {len(uploaded_files)} submissions..."):
+        report = analyze_excel_folder(temp_dir)
 
-    report = analyze_excel_folder(temp_dir)
+    st.success("✅ Analysis complete!")
 
     st.subheader("🧾 Report Summary")
     st.markdown(report)
 
-    # optionally allow download
     st.download_button("Download Report", report, file_name="report.txt")
 
     shutil.rmtree(temp_dir)
